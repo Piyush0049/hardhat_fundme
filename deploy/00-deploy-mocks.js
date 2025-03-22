@@ -1,12 +1,10 @@
 const { network } = require("hardhat");
-const { networkConfig, developmentChains, DECIMALS, INITIAL_ANSWER } = require("../helper-hardhat-config");
+const { developmentChains, DECIMALS, INITIAL_ANSWER } = require("../helper-hardhat-config");
 
 const func = async ({ getNamedAccounts, deployments }) => {
-    console.log("abcdef");
+    console.log("Deployment command: 0");
     const { deployer } = await getNamedAccounts();
     const { deploy, log } = deployments;
-    console.log(network)
-    const chainID = network.config.chainId;
     if (developmentChains.includes(network.name)) {
         log("Local network detected! Deploying mocks...");
         await deploy("MockV3Aggregator", {
@@ -17,6 +15,7 @@ const func = async ({ getNamedAccounts, deployments }) => {
         });
         console.log("Mock deployed!");
     }
+    console.log("-------------------------------->")
 };
 
 module.exports = func;

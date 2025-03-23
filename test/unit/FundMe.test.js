@@ -9,9 +9,7 @@ describe("FundMe", function () {
     deployer = (await getNamedAccounts()).deployer;
     await deployments.fixture(["all"]);
     const fundMeDeployment = await deployments.get("FundMe");
-    console.log("fundMeDeployment : ", fundMeDeployment)
     fundMe = await ethers.getContractAt("FundMe", fundMeDeployment.address);
-    console.log("fundMe : ", fundMe)
     const aggregatorDeployment = await deployments.get("MockV3Aggregator");
     mockV3Aggregator = await ethers.getContractAt(
       "MockV3Aggregator",
@@ -50,16 +48,34 @@ describe("FundMe", function () {
       const fundmeaddress = (await deployments.get("FundMe")).address;
       const fundMeBalance = await ethers.provider.getBalance(fundmeaddress);
       const deployerBalance = await ethers.provider.getBalance(deployer);
-      console.log(fundMeBalance, " ", deployerBalance);
       const response = await fundMe.withdraw();
       const reciept = await response.wait(1);
-
-      console.log("Reciept : ", reciept);
       const newFundMeBalance = await ethers.provider.getBalance(fundmeaddress);
       const newDeployerBalance = await ethers.provider.getBalance(deployer);
-      console.log(newFundMeBalance, " ", newDeployerBalance);
       assert.equal(newFundMeBalance.toString(), "0");
-      assert.equal(newDeployerBalance + reciept.fee, deployerBalance + fundMeBalance);
+      assert.equal(
+        newDeployerBalance + reciept.fee,
+        deployerBalance + fundMeBalance
+      );
+    });
+    it("allows us to withdraw from multiple accounts", async function () {
+      const accounts = await ethers.getSigners();
+      for (let i = 0; i < 6; i++) {
+        const fundMeConnectedContract = await fundMe.connect(accounts[i]);
+        await fundMeConnectedContract.fund({ value: sendValue });
+      }
+      const fundmeaddress = (await deployments.get("FundMe")).address;
+      const collectedFund = await ethers.provider.getBalance(fundmeaddress);
+      const deployerFund = await ethers.provider.getBalance(deployer);
+      const response = await fundMe.withdraw();
+      const reciept = await response.wait(1);
+      const newcollectedFund = await ethers.provider.getBalance(fundmeaddress);
+      const newdeployerFund = await ethers.provider.getBalance(deployer);
+      assert.equal(newcollectedFund, 0);
+      assert.equal(
+        (newdeployerFund + reciept.fee).toString(),
+        (collectedFund + deployerFund).toString()
+      );
     });
   });
 });

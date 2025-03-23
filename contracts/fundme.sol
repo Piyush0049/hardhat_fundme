@@ -8,30 +8,25 @@ error NotOwner();
 contract FundMe {
     using PriceConverter for uint256;
 
-    mapping(address => uint256) public addressToAmountFunded;
-    address[] public funders;
+    mapping(address => uint256) public s_addressToAmountFunded;
+    address[] public s_funders;
 
     address public i_owner;
     uint256 public constant MINIMUM_USD = 50 * 10 ** 18;
-    AggregatorV3Interface public pricefeed;
+    AggregatorV3Interface public s_pricefeed;
 
-    constructor(address pricefeedAddress) {
+    constructor(address s_pricefeedAddress) {
         i_owner = msg.sender;
-        pricefeed = AggregatorV3Interface(pricefeedAddress);
+        s_pricefeed = AggregatorV3Interface(s_pricefeedAddress);
     }
 
     function fund() public payable {
         require(
-            msg.value.getConversionRate(pricefeed) >= MINIMUM_USD,
+            msg.value.getConversionRate(s_pricefeed) >= MINIMUM_USD,
             "You need to spend more ETH!"
         );
-        addressToAmountFunded[msg.sender] += msg.value;
-        funders.push(msg.sender);
-    }
-
-    function getVersion() public view returns (uint256) {
-        AggregatorV3Interface priceFeed = pricefeed;
-        return priceFeed.version();
+        s_addressToAmountFunded[msg.sender] += msg.value;
+        s_funders.push(msg.sender);
     }
 
     modifier onlyOwner() {
@@ -42,13 +37,13 @@ contract FundMe {
     function withdraw() public onlyOwner {
         for (
             uint256 funderIndex = 0;
-            funderIndex < funders.length;
+            funderIndex < s_funders.length;
             funderIndex++
         ) {
-            address funder = funders[funderIndex];
-            addressToAmountFunded[funder] = 0;
+            address funder = s_funders[funderIndex];
+            s_addressToAmountFunded[funder] = 0;
         }
-        funders = new address[](0);
+        s_funders = new address[](0);
         (bool callSuccess, ) = payable(msg.sender).call{
             value: address(this).balance
         }("");

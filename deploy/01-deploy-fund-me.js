@@ -19,12 +19,11 @@ const func = async ({ getNamedAccounts, deployments }) => {
     ethUsdPriceAddress = networkConfig[chainID]["ethUsdPriceFeed"];
   }
   log("Deploying the contract...");
-  console.log(ethUsdPriceAddress);
   const fundme = await deploy("FundMe", {
     from: deployer,
     args: [ethUsdPriceAddress],
     log: true,
-    waitConfirmation: network.config.blockConfirmation || 1,
+    waitConfirmation: network.config.blockConfirmation || 5,
   });
   console.log("Contract deployed!");
   if (
